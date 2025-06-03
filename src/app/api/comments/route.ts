@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { getCurrentUser } from "@/lib/auth"
 import { myOrm } from "@/lib/db"
 import { Comment } from "./data"
 
@@ -38,6 +39,33 @@ export async function GET(request: NextRequest) {
   const response: GetCommentsResponse = {
     comments: comments.slice(0, pageSize),
     nextCursor,
+  }
+
+  return NextResponse.json(response)
+}
+
+export async function POST(request: NextRequest) {
+  const { text } = await request.json()
+
+  if (!text) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    )
+  }
+
+  const delay = Math.floor(Math.random() * 700) + 300
+  await new Promise((resolve) => setTimeout(resolve, delay))
+
+  const currentUser = await getCurrentUser()
+
+  const newComment = await myOrm.createComment({
+    text,
+    user: currentUser,
+  })
+
+  const response: CreateCommentResponse = {
+    comment: newComment,
   }
 
   return NextResponse.json(response)
